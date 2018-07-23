@@ -5,8 +5,10 @@ set -e
 root_dir="${HOME}/.bitcore"
 platform=`uname -a | awk '{print tolower($1)}'`
 arch=`uname -m`
-version="0.12.2"
-url="https://bamboo.dash.org/browse/DASHL-REL-13/artifact/JOB1/gitian-linux-dash-dist"
+version="0.12.3.2"
+short_version="0.12.3"
+url="https://github.com/dashpay/dash/releases/download/v${version}"
+signer_key_url='https://keybase.io/udjinm6/pgp_keys.asc'
 
 if [ "${platform}" == "linux" ]; then
     if [ "${arch}" == "x86_64" ]; then
@@ -17,14 +19,14 @@ if [ "${platform}" == "linux" ]; then
 elif [ "${platform}" == "darwin" ]; then
     tarball_name="dashcore-${version}-osx64.tar.gz"
 else
-    echo "Dash binary distribution not available for platform and architecture"
+    echo "Dash binary distribution not available for this platform/architecture"
     exit -1
 fi
 
 binary_url="${url}/${tarball_name}"
 shasums_url="${url}/SHA256SUMS.asc"
 
-download_bitcoind() {
+download_dashd() {
 
     mkdir -p "${root_dir}"
     mkdir -p "${root_dir}/data"
@@ -53,7 +55,7 @@ download_bitcoind() {
             echo "Unpacking dash distribution"
             tar -xvzf $tarball_name
             if test $? -eq 0; then
-                ln -sf "dashcore-${version}/bin/dashd"
+                ln -sf "./dashcore-${version}/bin/dashd"
                 return;
             fi
         fi
@@ -64,8 +66,15 @@ download_bitcoind() {
 
 verify_download() {
     echo "Verifying signatures of dash download"
-    gpg --verify "${root_dir}/bin/SHA256SUMS.asc"
 
+    if hash curl 2>/dev/null && hash gpg 2>/dev/null; then
+      curl "${signer_key_url}" | gpg --import
+    else
+      echo 'You must have the curl and gpg in order to verify signatures. If on OSX, please use brew install gpg curl. If on Linux, please use your package management system such as apt-get or yum/dnf or pacman.'
+      exit -1
+    fi
+
+    gpg --verify "${root_dir}/data/SHA256SUMS.asc"
     if hash shasum 2>/dev/null; then
         shasum_cmd="shasum -a 256"
     else
@@ -77,44 +86,20 @@ verify_download() {
     echo "Checksum (download): ${download_sha}"
     echo "Checksum (verified): ${expected_sha}"
     if [ "${download_sha}" != "${expected_sha}" ]; then
-        echo -e "\033[1;31mChecksums did NOT match!\033[0m\n"
+        echo -e "\033[1;31mChecksums did NOT match! Please do not proceed with the installation.\033[0m\n"
         exit 1
     else
         echo -e "\033[1;32mChecksums matched!\033[0m\n"
     fi
 }
 
-download=1
-verify=0
-
-if [ "${SKIP_BITCOIN_DOWNLOAD}" = 1 ]; then
-    download=0;
+if [ -z "${SKIP_DASH_DOWNLOAD}" ]; then
+    echo 'Skipping the dashd download...'
+    download_dashd
 fi
 
-if [ "${VERIFY_BITCOIN_DOWNLOAD}" = 1 ]; then
-    verify=1;
-fi
-
-while [ -n "$1" ]; do
-  param="$1"
-  value="$2"
-
-  case $param in
-    --skip-bitcoin-download)
-          download=0
-          ;;
-    --verify-bitcoin-download)
-          verify=1
-          ;;
-  esac
-  shift
-done
-
-if [ "${download}" = 1 ]; then
-    download_bitcoind
-fi
-
-if [ "${verify}" = 1 ]; then
+if [ -z "${SKIP_DASH_VERIFY}" ]; then
+    echo 'Skipping the dashd verification...'
     verify_download
 fi
 
