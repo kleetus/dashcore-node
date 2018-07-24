@@ -11,11 +11,7 @@ url="https://github.com/dashpay/dash/releases/download/v${version}"
 signer_key_url='https://keybase.io/udjinm6/pgp_keys.asc'
 
 if [ "${platform}" == "linux" ]; then
-    if [ "${arch}" == "x86_64" ]; then
-        tarball_name="dashcore-${version}-linux64.tar.gz"
-    elif [ "${arch}" == "x86_32" ]; then
-        tarball_name="dashcore-${version}-linux32.tar.gz"
-    fi
+    tarball_name="dashcore-${version}-${arch}-linux-gnu.tar.gz"
 elif [ "${platform}" == "darwin" ]; then
     tarball_name="dashcore-${version}-osx64.tar.gz"
 else
@@ -55,7 +51,7 @@ download_dashd() {
             echo "Unpacking dash distribution"
             tar -xvzf $tarball_name
             if test $? -eq 0; then
-                ln -sf "./dashcore-${version}/bin/dashd"
+                ln -sf "./dashcore-${short_version}/bin/dashd"
                 return;
             fi
         fi
@@ -93,14 +89,5 @@ verify_download() {
     fi
 }
 
-if [ -z "${SKIP_DASH_DOWNLOAD}" ]; then
-    echo 'Skipping the dashd download...'
-    download_dashd
-fi
-
-if [ -z "${SKIP_DASH_VERIFY}" ]; then
-    echo 'Skipping the dashd verification...'
-    verify_download
-fi
-
-exit 0
+download_dashd
+verify_download
