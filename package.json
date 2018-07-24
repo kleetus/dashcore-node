@@ -2,7 +2,7 @@
   "name": "bitcore-node-dash",
   "description": "Full node with extended capabilities using Bitcore and Dash Core",
   "author": "BitPay <dev@bitpay.com>",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "main": "./index.js",
   "repository": "git://github.com/dashevo/bitcore-node-dash.git",
   "homepage": "https://github.com/dashevo/bitcore-node-dash",
@@ -61,7 +61,8 @@
     "semver": "^5.0.1",
     "socket.io": "^1.4.5",
     "socket.io-client": "^1.4.5",
-    "zeromq": "^4.6.0"
+    "zeromq": "^4.6.0",
+    "insight-api-dash": "0.6.0"
   },
   "optionalDependencies": {
     "bufferutil": "~1.2.1",
